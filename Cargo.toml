@@ -1,0 +1,26 @@
+[package]
+name = "async-signal"
+version = "0.1.0"
+edition = "2018"
+authors = ["John Nunley <jtnunley01@gmail.com>"]
+rust-version = "1.48"
+description = "Async signal handling"
+license = "Apache-2.0 OR MIT"
+repository = "https://github.com/notgull/async-signal"
+keywords = ["async", "signal", "signal-hook", "signal-hook-registry"]
+categories = ["asynchronous", "concurrency", "os", "signal-handling"]
+exclude = ["/.*"]
+
+[dependencies]
+async-io = "1.12.0"
+futures-core = "0.3.26"
+futures-io = "0.3.26"
+libc = "0.2.139"
+signal-hook-registry = "1.4.0"
+
+[dev-dependencies]
+futures-lite = "1.12.0"
+signal-hook = "0.3.14"
+
+[build-dependencies]
+autocfg = "1.1.0"

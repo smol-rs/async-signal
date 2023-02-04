@@ -1,42 +1,45 @@
 //! Asynchronous signal handling.
-//! 
+//!
 //! This crate provides the [`Signals`] type, which can be used to listen for POSIX signals asynchronously.
 //! It can be seen as an asynchronous version of [`signal_hook::iterator::Signals`].
-//! 
+//!
 //! As of the time of writing, this crate is `unix`-only.
-//! 
+//!
 //! [`signal_hook::iterator::Signals`]: https://docs.rs/signal-hook/latest/signal_hook/iterator/struct.Signals.html
-//! 
+//!
 //! # Implementation
-//! 
+//!
 //! This crate uses the [`signal_hook_registry`] crate to register a listener for each signal. That
 //! listener will then send a message through a Unix socket to the [`Signals`] type, which will
 //! receive it and notify the user. Asynchronous notification is done through the [`async-io`] crate.
-//! 
+//!
+//! Note that the internal pipe has a limited capacity. Once it has reached capacity, additional
+//! signals will be dropped.
+//!
 //! [`signal_hook_registry`]: https://crates.io/crates/signal-hook-registry
 //! [`async-io`]: https://crates.io/crates/async-io
-//! 
+//!
 //! # Examples
-//! 
+//!
 //! ```no_run
 //! use async_signal::{Signal, Signals};
 //! use futures_lite::prelude::*;
 //! use signal_hook::low_level;
-//! 
+//!
 //! # fn main() -> Result<(), Box<dyn std::error::Error>> {
 //! # async_io::block_on(async {
 //! // Register the signals we want to receive.
-//! let signals = Signals::new(&[
+//! let mut signals = Signals::new(&[
 //!     Signal::Term,
 //!     Signal::Quit,
-//!      Signal::Int,
+//!     Signal::Int,
 //! ])?;
-//! 
+//!
 //! // Wait for a signal to be received.
 //! while let Some(signal) = signals.next().await {
 //!     // Print the signal.
 //!     eprintln!("Received signal {:?}", signal);
-//! 
+//!
 //!     // After printing it, do whatever the signal was supposed to do in the first place.
 //!     low_level::emulate_default_handler(signal.unwrap() as i32).unwrap();
 //! }
@@ -193,7 +196,7 @@ define_signal_enum! {
 const BUFFER_LEN: usize = mem::size_of::<libc::c_int>();
 
 /// Wait for a specific set of signals.
-/// 
+///
 /// See the [module-level documentation](index.html) for more details.
 pub struct Signals {
     /// The read end of the signal pipe.
@@ -234,16 +237,12 @@ impl fmt::Debug for Signals {
 
 impl Signals {
     /// Create a new `Signals` instance with a set of signals.
-    pub fn new<B>(signals: impl IntoIterator<Item = B>) -> io::Result<Self> where B: Borrow<Signal> {
-        let (read, write) = UnixStream::pair()?;
-        let read = Async::new(read)?;
-        write.set_nonblocking(true)?;
-
-        let mut this = Self {
-            read,
-            write,
-            signal_ids: HashMap::new(),
-        };
+    pub fn new<B>(signals: impl IntoIterator<Item = B>) -> io::Result<Self>
+    where
+        B: Borrow<Signal>,
+    {
+        // Use another function to avoid monomorphization code bloat.
+        let mut this = Self::_new()?;
 
         // Add the signals to the set of signals to wait for.
         this.add_signals(signals)?;
@@ -251,8 +250,20 @@ impl Signals {
         Ok(this)
     }
 
+    fn _new() -> io::Result<Self> {
+        let (read, write) = UnixStream::pair()?;
+        let read = Async::new(read)?;
+        write.set_nonblocking(true)?;
+
+        Ok(Self {
+            read,
+            write,
+            signal_ids: HashMap::new(),
+        })
+    }
+
     /// Add signals to the set of signals to wait for.
-    /// 
+    ///
     /// One signal cannot be added twice. If a signal that has already been added is passed to this
     /// method, it will be ignored.
     pub fn add_signals<B>(&mut self, signals: impl IntoIterator<Item = B>) -> io::Result<()>
@@ -289,7 +300,7 @@ impl Signals {
     }
 
     /// Remove signals from the set of signals to wait for.
-    /// 
+    ///
     /// This function can be used to opt out of listening to signals previously registered via
     /// [`add_signals`](Self::add_signals) or [`new`](Self::new). If a signal that has not been
     /// registered is passed to this method, it will be ignored.

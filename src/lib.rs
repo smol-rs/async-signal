@@ -204,12 +204,14 @@ pub struct Signals {
 
     /// The map between signal numbers and signal IDs.
     signal_ids: HashMap<Signal, SigId>,
+}
 
-    /// The buffer used to read signals from the pipe.
-    buffer: [u8; BUFFER_LEN],
-
-    /// Number of bytes currently in the buffer.
-    buffer_len: u8,
+impl Drop for Signals {
+    fn drop(&mut self) {
+        for signal in self.signal_ids.values() {
+            signal_hook_registry::unregister(*signal);
+        }
+    }
 }
 
 impl fmt::Debug for Signals {
@@ -241,8 +243,6 @@ impl Signals {
             read,
             write,
             signal_ids: HashMap::new(),
-            buffer: [0; BUFFER_LEN],
-            buffer_len: 0,
         };
 
         // Add the signals to the set of signals to wait for.
@@ -275,7 +275,6 @@ impl Signals {
 
             let id = unsafe {
                 signal_hook_registry::register(number, move || {
-                    // Use rustix for the direct syscall.
                     // SAFETY: to_ne_bytes() and write() are both signal safe
                     let bytes = number.to_ne_bytes();
                     let _ = (&write).write(&bytes);
@@ -333,31 +332,48 @@ impl Unpin for Signals {}
 impl Stream for Signals {
     type Item = io::Result<Signal>;
 
+    #[inline]
+    fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        Pin::new(&mut &*self).poll_next(cx)
+    }
+
+    #[inline]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        // This stream is expected to never end.
+        (std::usize::MAX, None)
+    }
+}
+
+impl Stream for &Signals {
+    type Item = io::Result<Signal>;
+
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         let this = self.get_mut();
 
+        let mut buffer = [0; BUFFER_LEN];
+        let mut buffer_len = 0;
+
         // Read into the buffer.
         loop {
-            if this.buffer_len == BUFFER_LEN as u8 {
+            if buffer_len >= BUFFER_LEN {
                 break;
             }
 
             // Try to fill up the entire buffer.
-            let buf_range = this.buffer_len as usize..BUFFER_LEN;
-            let res = ready!(Pin::new(&mut this.read).poll_read(cx, &mut this.buffer[buf_range]));
+            let buf_range = buffer_len..BUFFER_LEN;
+            let res = ready!(Pin::new(&mut &this.read).poll_read(cx, &mut buffer[buf_range]));
 
             match res {
                 Ok(0) => {
                     return Poll::Ready(Some(Err(io::Error::from(io::ErrorKind::UnexpectedEof))))
                 }
-                Ok(n) => this.buffer_len += n as u8,
+                Ok(n) => buffer_len += n,
                 Err(e) => return Poll::Ready(Some(Err(e))),
             }
         }
 
         // Convert the buffer into a signal number.
-        let number = i32::from_ne_bytes(this.buffer);
-        this.buffer_len = 0;
+        let number = i32::from_ne_bytes(buffer);
 
         // Convert the signal number into a signal.
         let signal = match Signal::from_number(number) {
@@ -369,6 +385,7 @@ impl Stream for Signals {
         Poll::Ready(Some(Ok(signal)))
     }
 
+    #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
         // This stream is expected to never end.
         (std::usize::MAX, None)

@@ -1,4 +1,4 @@
-# async-process
+# async-signal
 
 [![Build](https://github.com/notgull/async-signal/workflows/Build%20and%20test/badge.svg)](
 https://github.com/notgull/async-signal/actions)

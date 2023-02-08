@@ -1,3 +1,4 @@
+/// The build constants emitted here are NOT public API.
 fn main() {
     let cfg = match autocfg::AutoCfg::new() {
         Ok(cfg) => cfg,

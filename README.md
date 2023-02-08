@@ -1,9 +1,9 @@
 # async-signal
 
-[![Build](https://github.com/notgull/async-signal/workflows/Build%20and%20test/badge.svg)](
-https://github.com/notgull/async-signal/actions)
+[![Build](https://github.com/smol-rs/async-signal/workflows/Build%20and%20test/badge.svg)](
+https://github.com/smol-rs/async-signal/actions)
 [![License](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue.svg)](
-https://github.com/notgull/async-signal)
+https://github.com/smol-rs/async-signal)
 [![Cargo](https://img.shields.io/crates/v/async-io.svg)](
 https://crates.io/crates/async-io)
 [![Documentation](https://docs.rs/async-io/badge.svg)](
@@ -37,7 +37,7 @@ use signal_hook::low_level;
 let signals = Signals::new(&[
     Signal::Term,
     Signal::Quit,
-     Signal::Int,
+    Signal::Int,
 ])?;
 
 // Wait for a signal to be received.

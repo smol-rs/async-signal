@@ -266,12 +266,12 @@ impl Signals {
     ///
     /// One signal cannot be added twice. If a signal that has already been added is passed to this
     /// method, it will be ignored.
-    /// 
+    ///
     /// Registering a signal prevents the default behavior of that signal from occurring. For
     /// example, if you register `SIGINT`, pressing `Ctrl+C` will no longer terminate the process.
     /// To run the default signal handler, use [`signal_hook::low_level::emulate_default_handler`]
     /// instead.
-    /// 
+    ///
     /// [`signal_hook::low_level::emulate_default_handler`]: https://docs.rs/signal-hook/latest/signal_hook/low_level/fn.emulate_default_handler.html
     pub fn add_signals<B>(&mut self, signals: impl IntoIterator<Item = B>) -> io::Result<()>
     where

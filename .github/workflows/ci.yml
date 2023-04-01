@@ -29,6 +29,11 @@ jobs:
         if: startsWith(matrix.rust, 'nightly')
         run: cargo check -Z features=dev_dep
       - run: cargo test
+      - name: Force tests with pipe implementation
+        if : startsWith(matrix.os, 'ubuntu-latest')
+        run: cargo test
+        env:
+          RUSTFLAGS: --cfg async_signal_force_pipe_impl
 
   msrv:
     runs-on: ubuntu-latest

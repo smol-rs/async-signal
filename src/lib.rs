@@ -50,24 +50,6 @@
 
 #![cfg(unix)]
 
-use async_io::Async;
-use futures_core::stream::Stream;
-use futures_io::AsyncRead;
-use signal_hook_registry::SigId;
-
-use std::borrow::Borrow;
-use std::collections::HashMap;
-use std::fmt;
-use std::io::{self, prelude::*};
-use std::mem;
-use std::os::unix::io::{AsRawFd, RawFd};
-use std::os::unix::net::UnixStream;
-use std::pin::Pin;
-use std::task::{Context, Poll};
-
-#[cfg(not(async_signal_no_io_safety))]
-use std::os::unix::io::{AsFd, BorrowedFd};
-
 macro_rules! ready {
     ($e: expr) => {
         match $e {
@@ -76,6 +58,33 @@ macro_rules! ready {
         }
     };
 }
+
+cfg_if::cfg_if! {
+    if #[cfg(async_signal_force_pipe_impl)] {
+        mod pipe;
+        use pipe as sys;
+    } else if #[cfg(any(target_os = "android", target_os = "linux"))] {
+        mod signalfd;
+        use signalfd as sys;
+    } else {
+        mod pipe;
+        use pipe as sys;
+    }
+}
+
+use futures_core::stream::Stream;
+use signal_hook_registry::SigId;
+
+use std::borrow::Borrow;
+use std::collections::HashMap;
+use std::fmt;
+use std::io;
+use std::os::unix::io::{AsRawFd, RawFd};
+use std::pin::Pin;
+use std::task::{Context, Poll};
+
+#[cfg(not(async_signal_no_io_safety))]
+use std::os::unix::io::{AsFd, BorrowedFd};
 
 macro_rules! define_signal_enum {
     (
@@ -193,17 +202,12 @@ define_signal_enum! {
     }
 }
 
-const BUFFER_LEN: usize = mem::size_of::<libc::c_int>();
-
 /// Wait for a specific set of signals.
 ///
 /// See the [module-level documentation](index.html) for more details.
 pub struct Signals {
-    /// The read end of the signal pipe.
-    read: Async<UnixStream>,
-
-    /// The write end of the signal pipe.
-    write: UnixStream,
+    /// The strategy used to read the signals.
+    notifier: sys::Notifier,
 
     /// The map between signal numbers and signal IDs.
     signal_ids: HashMap<Signal, SigId>,
@@ -228,8 +232,7 @@ impl fmt::Debug for Signals {
         }
 
         f.debug_struct("Signals")
-            .field("read", &self.read)
-            .field("write", &self.write)
+            .field("notifier", &self.notifier)
             .field("signal_ids", &RegisteredSignals(&self.signal_ids))
             .finish()
     }
@@ -241,25 +244,15 @@ impl Signals {
     where
         B: Borrow<Signal>,
     {
-        // Use another function to avoid monomorphization code bloat.
-        let mut this = Self::_new()?;
+        let mut this = Self {
+            notifier: sys::Notifier::new()?,
+            signal_ids: HashMap::new(),
+        };
 
         // Add the signals to the set of signals to wait for.
         this.add_signals(signals)?;
 
         Ok(this)
-    }
-
-    fn _new() -> io::Result<Self> {
-        let (read, write) = UnixStream::pair()?;
-        let read = Async::new(read)?;
-        write.set_nonblocking(true)?;
-
-        Ok(Self {
-            read,
-            write,
-            signal_ids: HashMap::new(),
-        })
     }
 
     /// Add signals to the set of signals to wait for.
@@ -285,18 +278,12 @@ impl Signals {
                 continue;
             }
 
-            // Use `signal-hook-registry` to register the signal.
-            let number = signal.number();
-
-            // Duplicate the write end of the signal pipe.
-            let write = self.write.try_clone()?;
+            // Get the closure to call when the signal is received.
+            let closure = self.notifier.add_signal(*signal)?;
 
             let id = unsafe {
-                signal_hook_registry::register(number, move || {
-                    // SAFETY: to_ne_bytes() and write() are both signal safe
-                    let bytes = number.to_ne_bytes();
-                    let _ = (&write).write(&bytes);
-                })?
+                // SAFETY: Closure is guaranteed to be signal-safe.
+                signal_hook_registry::register(signal.number(), closure)?
             };
 
             // Add the signal ID to the map.
@@ -324,6 +311,9 @@ impl Signals {
                 None => continue,
             };
 
+            // Remove the signal from the notifier.
+            self.notifier.remove_signal(*signal)?;
+
             // Use `signal-hook-registry` to unregister the signal.
             signal_hook_registry::unregister(id);
         }
@@ -334,14 +324,14 @@ impl Signals {
 
 impl AsRawFd for Signals {
     fn as_raw_fd(&self) -> RawFd {
-        self.read.as_raw_fd()
+        self.notifier.as_raw_fd()
     }
 }
 
 #[cfg(not(async_signal_no_io_safety))]
 impl AsFd for Signals {
     fn as_fd(&self) -> BorrowedFd<'_> {
-        self.read.as_fd()
+        self.notifier.as_fd()
     }
 }
 
@@ -366,40 +356,7 @@ impl Stream for &Signals {
     type Item = io::Result<Signal>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        let this = self.get_mut();
-
-        let mut buffer = [0; BUFFER_LEN];
-        let mut buffer_len = 0;
-
-        // Read into the buffer.
-        loop {
-            if buffer_len >= BUFFER_LEN {
-                break;
-            }
-
-            // Try to fill up the entire buffer.
-            let buf_range = buffer_len..BUFFER_LEN;
-            let res = ready!(Pin::new(&mut &this.read).poll_read(cx, &mut buffer[buf_range]));
-
-            match res {
-                Ok(0) => {
-                    return Poll::Ready(Some(Err(io::Error::from(io::ErrorKind::UnexpectedEof))))
-                }
-                Ok(n) => buffer_len += n,
-                Err(e) => return Poll::Ready(Some(Err(e))),
-            }
-        }
-
-        // Convert the buffer into a signal number.
-        let number = i32::from_ne_bytes(buffer);
-
-        // Convert the signal number into a signal.
-        let signal = match Signal::from_number(number) {
-            Some(signal) => signal,
-            None => return Poll::Ready(Some(Err(io::Error::from(io::ErrorKind::InvalidData)))),
-        };
-
-        // Return the signal.
+        let signal = ready!(self.notifier.poll_next(cx))?;
         Poll::Ready(Some(Ok(signal)))
     }
 

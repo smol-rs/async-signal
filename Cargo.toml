@@ -12,17 +12,26 @@ categories = ["asynchronous", "concurrency", "os", "signal-handling"]
 exclude = ["/.*"]
 
 [dependencies]
-async-io = "1.12.0"
 cfg-if = "1.0.0"
 futures-core = "0.3.26"
+
+[target.'cfg(unix)'.dependencies]
+async-io = "1.12.0"
 futures-io = "0.3.26"
 libc = "0.2.139"
 signal-hook-registry = "1.4.0"
+
+[target.'cfg(windows)'.dependencies]
+async-lock = "2.7.0"
+atomic-waker = "1.1.1"
+slab = "0.4.8"
+windows-targets = "0.48.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 concurrent-queue = "2.2.0"
 
 [dev-dependencies]
+async-io = "1.12.0"
 futures-lite = "1.12.0"
 signal-hook = "0.3.14"
 

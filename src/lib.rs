@@ -3,8 +3,6 @@
 //! This crate provides the [`Signals`] type, which can be used to listen for POSIX signals asynchronously.
 //! It can be seen as an asynchronous version of [`signal_hook::iterator::Signals`].
 //!
-//! As of the time of writing, this crate is `unix`-only.
-//!
 //! [`signal_hook::iterator::Signals`]: https://docs.rs/signal-hook/latest/signal_hook/iterator/struct.Signals.html
 //!
 //! # Implementation
@@ -15,6 +13,9 @@
 //!
 //! Note that the internal pipe has a limited capacity. Once it has reached capacity, additional
 //! signals will be dropped.
+//!
+//! On Windows, a different implementation that only supports `SIGINT` is used. This implementation
+//! uses a channel to notify the user.
 //!
 //! [`signal_hook_registry`]: https://crates.io/crates/signal-hook-registry
 //! [`async-io`]: https://crates.io/crates/async-io
@@ -48,8 +49,6 @@
 //! # }
 //! ```
 
-#![cfg(unix)]
-
 macro_rules! ready {
     ($e: expr) => {
         match $e {
@@ -66,25 +65,76 @@ cfg_if::cfg_if! {
     } else if #[cfg(any(target_os = "android", target_os = "linux"))] {
         mod signalfd;
         use signalfd as sys;
+    } else if #[cfg(windows)] {
+        mod channel;
+        use channel as sys;
     } else {
         mod pipe;
         use pipe as sys;
     }
 }
 
+cfg_if::cfg_if! {
+    if #[cfg(unix)] {
+        use signal_hook_registry as registry;
+    } else if #[cfg(windows)] {
+        mod windows_registry;
+        use windows_registry as registry;
+    }
+}
+
 use futures_core::stream::Stream;
-use signal_hook_registry::SigId;
+use registry::SigId;
 
 use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fmt;
 use std::io;
-use std::os::unix::io::{AsRawFd, RawFd};
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-#[cfg(not(async_signal_no_io_safety))]
+#[cfg(unix)]
+use std::os::unix::io::{AsRawFd, RawFd};
+
+#[cfg(all(unix, not(async_signal_no_io_safety)))]
 use std::os::unix::io::{AsFd, BorrowedFd};
+
+#[cfg(windows)]
+mod libc {
+    pub(crate) use std::os::raw::c_int;
+
+    // Define these ourselves.
+    // Copy-pasted from the libc crate
+    pub const SIGHUP: c_int = 1;
+    pub const SIGINT: c_int = 2;
+    pub const SIGQUIT: c_int = 3;
+    pub const SIGILL: c_int = 4;
+    pub const SIGTRAP: c_int = 5;
+    pub const SIGABRT: c_int = 6;
+    pub const SIGFPE: c_int = 8;
+    pub const SIGKILL: c_int = 9;
+    pub const SIGSEGV: c_int = 11;
+    pub const SIGPIPE: c_int = 13;
+    pub const SIGALRM: c_int = 14;
+    pub const SIGTERM: c_int = 15;
+    pub const SIGTTIN: c_int = 21;
+    pub const SIGTTOU: c_int = 22;
+    pub const SIGXCPU: c_int = 24;
+    pub const SIGXFSZ: c_int = 25;
+    pub const SIGVTALRM: c_int = 26;
+    pub const SIGPROF: c_int = 27;
+    pub const SIGWINCH: c_int = 28;
+    pub const SIGCHLD: c_int = 17;
+    pub const SIGBUS: c_int = 7;
+    pub const SIGUSR1: c_int = 10;
+    pub const SIGUSR2: c_int = 12;
+    pub const SIGCONT: c_int = 18;
+    pub const SIGSTOP: c_int = 19;
+    pub const SIGTSTP: c_int = 20;
+    pub const SIGURG: c_int = 23;
+    pub const SIGIO: c_int = 29;
+    pub const SIGSYS: c_int = 31;
+}
 
 macro_rules! define_signal_enum {
     (
@@ -117,6 +167,7 @@ macro_rules! define_signal_enum {
             }
 
             /// Parse a signal from its number.
+            #[cfg(unix)]
             fn from_number(number: libc::c_int) -> Option<Self> {
                 match number {
                     $(
@@ -216,7 +267,7 @@ pub struct Signals {
 impl Drop for Signals {
     fn drop(&mut self) {
         for signal in self.signal_ids.values() {
-            signal_hook_registry::unregister(*signal);
+            registry::unregister(*signal);
         }
     }
 }
@@ -283,7 +334,7 @@ impl Signals {
 
             let id = unsafe {
                 // SAFETY: Closure is guaranteed to be signal-safe.
-                signal_hook_registry::register(signal.number(), closure)?
+                registry::register(signal.number(), closure)?
             };
 
             // Add the signal ID to the map.
@@ -315,20 +366,21 @@ impl Signals {
             self.notifier.remove_signal(*signal)?;
 
             // Use `signal-hook-registry` to unregister the signal.
-            signal_hook_registry::unregister(id);
+            registry::unregister(id);
         }
 
         Ok(())
     }
 }
 
+#[cfg(unix)]
 impl AsRawFd for Signals {
     fn as_raw_fd(&self) -> RawFd {
         self.notifier.as_raw_fd()
     }
 }
 
-#[cfg(not(async_signal_no_io_safety))]
+#[cfg(all(unix, not(async_signal_no_io_safety)))]
 impl AsFd for Signals {
     fn as_fd(&self) -> BorrowedFd<'_> {
         self.notifier.as_fd()

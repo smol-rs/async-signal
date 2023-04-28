@@ -15,7 +15,7 @@
 //!
 //! Note that the internal pipe has a limited capacity. Once it has reached capacity, additional
 //! signals will be dropped.
-//! 
+//!
 //! On Windows, a different implementation that only supports `SIGINT` is used. This implementation
 //! uses a channel to notify the user.
 //!
@@ -92,7 +92,6 @@ use std::borrow::Borrow;
 use std::collections::HashMap;
 use std::fmt;
 use std::io;
-use std::os::raw::c_int;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
@@ -104,7 +103,7 @@ use std::os::unix::io::{AsFd, BorrowedFd};
 
 #[cfg(windows)]
 mod libc {
-    pub(crate) use super::c_int;
+    pub(crate) use std::os::raw::c_int;
 
     // Define these ourselves.
     // Copy-pasted from the libc crate

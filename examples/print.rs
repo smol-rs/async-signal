@@ -7,6 +7,7 @@ use signal_hook::low_level;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     async_io::block_on(async {
         // Register the signals we want to receive.
+        #[cfg(unix)]
         let signals = Signals::new(&[
             Signal::Term,
             Signal::Quit,
@@ -17,6 +18,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Signal::Child,
             Signal::Cont,
         ])?;
+
+        #[cfg(windows)]
+        let signals = Signals::new(&[Signal::Int])?;
 
         // Loop over the signals.
         signals

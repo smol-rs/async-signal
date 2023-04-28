@@ -4,10 +4,10 @@
 https://github.com/smol-rs/async-signal/actions)
 [![License](https://img.shields.io/badge/license-Apache--2.0_OR_MIT-blue.svg)](
 https://github.com/smol-rs/async-signal)
-[![Cargo](https://img.shields.io/crates/v/async-io.svg)](
-https://crates.io/crates/async-io)
-[![Documentation](https://docs.rs/async-io/badge.svg)](
-https://docs.rs/async-io)
+[![Cargo](https://img.shields.io/crates/v/async-signal.svg)](
+https://crates.io/crates/async-signal)
+[![Documentation](https://docs.rs/async-signal/badge.svg)](
+https://docs.rs/async-signal)
 
 Asynchronous signal handling.
  

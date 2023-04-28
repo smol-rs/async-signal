@@ -3,8 +3,6 @@
 //! This crate provides the [`Signals`] type, which can be used to listen for POSIX signals asynchronously.
 //! It can be seen as an asynchronous version of [`signal_hook::iterator::Signals`].
 //!
-//! As of the time of writing, this crate is `unix`-only.
-//!
 //! [`signal_hook::iterator::Signals`]: https://docs.rs/signal-hook/latest/signal_hook/iterator/struct.Signals.html
 //!
 //! # Implementation

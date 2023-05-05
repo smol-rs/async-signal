@@ -12,16 +12,17 @@ https://docs.rs/async-signal)
 Asynchronous signal handling.
  
 This crate provides the [`Signals`] type, which can be used to listen for POSIX signals asynchronously. It can be seen as an asynchronous version of [`signal_hook::iterator::Signals`].
- 
-As of the time of writing, this crate is `unix`-only.
 
 [`Signals`]: https://docs.rs/async-signal/latest/async_signal/struct.Signals.html
 [`signal_hook::iterator::Signals`]: https://docs.rs/signal-hook/latest/signal_hook/iterator/struct.Signals.html
 
 # Implementation
 
-This crate uses the [`signal_hook_registry`] crate to register a listener for each signal. That listener will then send a message through a Unix socket to the [`Signals`] type, which will receive it and notify the user. Asynchronous notification is done through the [`async-io`] crate.
+On `unix`, this crate uses the [`signal_hook_registry`] crate to register a listener for each signal. That listener will then send a message through a Unix socket to the [`Signals`] type, which will receive it and notify the user. Asynchronous notification is done through the [`async-io`] crate.
 
+Note that the internal pipe has a limited capacity. Once it has reached capacity, additional signals will be dropped.
+
+On Windows, a different implementation that only supports `SIGINT` is used. This implementation uses a channel to notify the user.
 
 [`signal_hook_registry`]: https://crates.io/crates/signal-hook-registry
 [`async-io`]: https://crates.io/crates/async-io

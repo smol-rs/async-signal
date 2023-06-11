@@ -8,7 +8,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     async_io::block_on(async {
         // Register the signals we want to receive.
         #[cfg(unix)]
-        let signals = Signals::new(&[
+        let signals = Signals::new([
             Signal::Term,
             Signal::Quit,
             Signal::Int,
@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ])?;
 
         #[cfg(windows)]
-        let signals = Signals::new(&[Signal::Int])?;
+        let signals = Signals::new([Signal::Int])?;
 
         // Loop over the signals.
         signals

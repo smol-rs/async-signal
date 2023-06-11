@@ -3,7 +3,7 @@ name = "async-signal"
 version = "0.2.0"
 edition = "2018"
 authors = ["John Nunley <jtnunley01@gmail.com>"]
-rust-version = "1.48"
+rust-version = "1.63"
 description = "Async signal handling"
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/smol-rs/async-signal"
@@ -34,6 +34,3 @@ concurrent-queue = "2.2.0"
 async-io = "1.12.0"
 futures-lite = "1.12.0"
 signal-hook = "0.3.14"
-
-[build-dependencies]
-autocfg = "1.1.0"

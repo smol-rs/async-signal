@@ -7,13 +7,10 @@ use futures_io::AsyncRead;
 
 use std::io::{self, prelude::*};
 use std::mem;
-use std::os::unix::io::{AsRawFd, RawFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, RawFd};
 use std::os::unix::net::UnixStream;
 use std::pin::Pin;
 use std::task::{Context, Poll};
-
-#[cfg(not(async_signal_no_io_safety))]
-use std::os::unix::io::{AsFd, BorrowedFd};
 
 const BUFFER_LEN: usize = mem::size_of::<libc::c_int>();
 
@@ -101,7 +98,6 @@ impl AsRawFd for Notifier {
     }
 }
 
-#[cfg(not(async_signal_no_io_safety))]
 impl AsFd for Notifier {
     fn as_fd(&self) -> BorrowedFd<'_> {
         self.read.as_fd()

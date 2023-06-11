@@ -94,10 +94,7 @@ use std::pin::Pin;
 use std::task::{Context, Poll};
 
 #[cfg(unix)]
-use std::os::unix::io::{AsRawFd, RawFd};
-
-#[cfg(all(unix, not(async_signal_no_io_safety)))]
-use std::os::unix::io::{AsFd, BorrowedFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, RawFd};
 
 #[cfg(windows)]
 mod libc {
@@ -380,7 +377,7 @@ impl AsRawFd for Signals {
     }
 }
 
-#[cfg(all(unix, not(async_signal_no_io_safety)))]
+#[cfg(unix)]
 impl AsFd for Signals {
     fn as_fd(&self) -> BorrowedFd<'_> {
         self.notifier.as_fd()

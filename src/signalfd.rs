@@ -18,12 +18,9 @@ use concurrent_queue::ConcurrentQueue;
 use std::fmt;
 use std::io;
 use std::mem;
-use std::os::unix::io::{AsRawFd, RawFd};
+use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, RawFd};
 use std::sync::Arc;
 use std::task::{Context, Poll};
-
-#[cfg(not(async_signal_no_io_safety))]
-use std::os::unix::io::{AsFd, BorrowedFd};
 
 const MAX_SIGNALS: usize = 16;
 
@@ -140,7 +137,6 @@ impl AsRawFd for Notifier {
     }
 }
 
-#[cfg(not(async_signal_no_io_safety))]
 impl AsFd for Notifier {
     fn as_fd(&self) -> BorrowedFd<'_> {
         self.fd.as_fd()
@@ -197,7 +193,6 @@ impl AsRawFd for Signalfd {
     }
 }
 
-#[cfg(not(async_signal_no_io_safety))]
 impl AsFd for Signalfd {
     fn as_fd(&self) -> BorrowedFd<'_> {
         unsafe { BorrowedFd::borrow_raw(self.0) }

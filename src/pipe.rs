@@ -51,7 +51,7 @@ impl Notifier {
         })
     }
 
-    /// Remoe a signal from the notifier.
+    /// Remove a signal from the notifier.
     pub(super) fn remove_signal(&mut self, _signal: Signal) -> io::Result<()> {
         Ok(())
     }

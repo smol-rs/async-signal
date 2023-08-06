@@ -14,6 +14,7 @@ macro_rules! syscall {
 use crate::Signal;
 use async_io::Async;
 use concurrent_queue::ConcurrentQueue;
+use futures_core::ready;
 
 use std::fmt;
 use std::io;

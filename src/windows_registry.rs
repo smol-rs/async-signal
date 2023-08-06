@@ -59,7 +59,7 @@ pub(crate) unsafe fn register(
     Ok(Registry::get()?.register(handler))
 }
 
-/// Derigister a handler from the global registry.
+/// Deregister a handler from the global registry.
 pub fn unregister(id: SigId) {
     if let Ok(registry) = Registry::get() {
         registry.unregister(id)

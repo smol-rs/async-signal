@@ -3,6 +3,7 @@
 use crate::Signal;
 
 use async_io::Async;
+use futures_core::ready;
 use futures_io::AsyncRead;
 
 use std::io::{self, prelude::*};

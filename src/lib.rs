@@ -56,15 +56,6 @@
     html_logo_url = "https://raw.githubusercontent.com/smol-rs/smol/master/assets/images/logo_fullsize_transparent.png"
 )]
 
-macro_rules! ready {
-    ($e: expr) => {
-        match $e {
-            Poll::Ready(t) => t,
-            Poll::Pending => return Poll::Pending,
-        }
-    };
-}
-
 cfg_if::cfg_if! {
     if #[cfg(async_signal_force_pipe_impl)] {
         mod pipe;
@@ -90,6 +81,7 @@ cfg_if::cfg_if! {
     }
 }
 
+use futures_core::ready;
 use futures_core::stream::Stream;
 use registry::SigId;
 

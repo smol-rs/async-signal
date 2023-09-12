@@ -27,6 +27,8 @@
 
 use async_lock::OnceCell;
 use slab::Slab;
+use windows_sys::Win32::Foundation::BOOL;
+use windows_sys::Win32::System::Console::{SetConsoleCtrlHandler, CTRL_C_EVENT};
 
 use std::io::Result;
 use std::mem;
@@ -147,12 +149,3 @@ impl Registry {
             .try_remove(id);
     }
 }
-
-// Bindings generated with windows-bindgen v0.49.0
-::windows_targets::link!("kernel32.dll" "system" fn SetConsoleCtrlHandler(handlerroutine : PHANDLER_ROUTINE, add : BOOL) -> BOOL);
-#[allow(clippy::upper_case_acronyms)]
-pub type BOOL = i32;
-pub const CTRL_C_EVENT: u32 = 0u32;
-#[allow(non_camel_case_types)]
-pub type PHANDLER_ROUTINE =
-    ::core::option::Option<unsafe extern "system" fn(ctrltype: u32) -> BOOL>;

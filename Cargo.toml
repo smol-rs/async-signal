@@ -25,7 +25,14 @@ signal-hook-registry = "1.4.0"
 async-lock = "2.7.0"
 atomic-waker = "1.1.1"
 slab = "0.4.8"
-windows-targets = "0.48.0"
+
+[target.'cfg(windows)'.dependencies.windows-sys]
+version = "0.48"
+default-features = false
+features = [
+    "Win32_Foundation",
+    "Win32_System_Console",
+]
 
 [target.'cfg(target_os = "linux")'.dependencies]
 concurrent-queue = "2.2.0"

@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         rust: [nightly, beta, stable]
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
         run: cargo check -Z features=dev_dep
       - run: cargo test
       - name: Force tests with pipe implementation
-        if: startsWith(matrix.os, 'ubuntu-latest')
+        if: startsWith(matrix.os, 'ubuntu')
         run: cargo test
         env:
           RUSTFLAGS: --cfg async_signal_force_pipe_impl

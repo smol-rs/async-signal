@@ -57,13 +57,7 @@
 )]
 
 cfg_if::cfg_if! {
-    if #[cfg(async_signal_force_pipe_impl)] {
-        mod pipe;
-        use pipe as sys;
-    } else if #[cfg(any(target_os = "android", target_os = "linux"))] {
-        mod signalfd;
-        use signalfd as sys;
-    } else if #[cfg(windows)] {
+    if #[cfg(windows)] {
         mod channel;
         use channel as sys;
     } else {

@@ -34,9 +34,6 @@ features = [
     "Win32_System_Console",
 ]
 
-[target.'cfg(any(target_os = "android", target_os = "linux"))'.dependencies]
-concurrent-queue = "2.2.0"
-
 [dev-dependencies]
 async-io = "1.12.0"
 fastrand = "2.0.1"

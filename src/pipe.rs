@@ -13,7 +13,7 @@ use std::os::unix::net::UnixStream;
 use std::pin::Pin;
 use std::task::{Context, Poll};
 
-const BUFFER_LEN: usize = mem::size_of::<libc::c_int>();
+const BUFFER_LEN: usize = mem::size_of::<std::os::raw::c_int>();
 
 /// The notifier that uses an asynchronous pipe.
 #[derive(Debug)]
@@ -80,7 +80,7 @@ impl Notifier {
         }
 
         // Convert the buffer into a signal number.
-        let number = i32::from_ne_bytes(buffer);
+        let number = std::os::raw::c_int::from_ne_bytes(buffer);
 
         // Convert the signal number into a signal.
         let signal = match Signal::from_number(number) {

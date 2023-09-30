@@ -89,40 +89,53 @@ use std::task::{Context, Poll};
 #[cfg(unix)]
 use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, RawFd};
 
-#[cfg(windows)]
-mod libc {
+mod signum {
     pub(crate) use std::os::raw::c_int;
 
-    // Copy-pasted from the libc crate
-    pub const SIGHUP: c_int = 1;
-    pub const SIGINT: c_int = 2;
-    pub const SIGQUIT: c_int = 3;
-    pub const SIGILL: c_int = 4;
-    pub const SIGTRAP: c_int = 5;
-    pub const SIGABRT: c_int = 6;
-    pub const SIGFPE: c_int = 8;
-    pub const SIGKILL: c_int = 9;
-    pub const SIGSEGV: c_int = 11;
-    pub const SIGPIPE: c_int = 13;
-    pub const SIGALRM: c_int = 14;
-    pub const SIGTERM: c_int = 15;
-    pub const SIGTTIN: c_int = 21;
-    pub const SIGTTOU: c_int = 22;
-    pub const SIGXCPU: c_int = 24;
-    pub const SIGXFSZ: c_int = 25;
-    pub const SIGVTALRM: c_int = 26;
-    pub const SIGPROF: c_int = 27;
-    pub const SIGWINCH: c_int = 28;
-    pub const SIGCHLD: c_int = 17;
-    pub const SIGBUS: c_int = 7;
-    pub const SIGUSR1: c_int = 10;
-    pub const SIGUSR2: c_int = 12;
-    pub const SIGCONT: c_int = 18;
-    pub const SIGSTOP: c_int = 19;
-    pub const SIGTSTP: c_int = 20;
-    pub const SIGURG: c_int = 23;
-    pub const SIGIO: c_int = 29;
-    pub const SIGSYS: c_int = 31;
+    macro_rules! sig {
+        ($rustix_name:ident, $raw_value:literal) => {{
+            #[cfg(unix)]
+            {
+                rustix::process::Signal::$rustix_name as c_int
+            }
+
+            #[cfg(windows)]
+            {
+                $raw_value
+            }
+        }};
+    }
+
+    // Define these ourselves.
+    pub const SIGHUP: c_int = sig!(Hup, 1);
+    pub const SIGINT: c_int = sig!(Int, 2);
+    pub const SIGQUIT: c_int = sig!(Quit, 3);
+    pub const SIGILL: c_int = sig!(Ill, 4);
+    pub const SIGTRAP: c_int = sig!(Trap, 5);
+    pub const SIGABRT: c_int = sig!(Abort, 6);
+    pub const SIGFPE: c_int = sig!(Fpe, 8);
+    pub const SIGKILL: c_int = sig!(Kill, 9);
+    pub const SIGSEGV: c_int = sig!(Segv, 11);
+    pub const SIGPIPE: c_int = sig!(Pipe, 13);
+    pub const SIGALRM: c_int = sig!(Alarm, 14);
+    pub const SIGTERM: c_int = sig!(Term, 15);
+    pub const SIGTTIN: c_int = sig!(Ttin, 21);
+    pub const SIGTTOU: c_int = sig!(Ttou, 22);
+    pub const SIGXCPU: c_int = sig!(Xcpu, 24);
+    pub const SIGXFSZ: c_int = sig!(Xfsz, 25);
+    pub const SIGVTALRM: c_int = sig!(Vtalarm, 26);
+    pub const SIGPROF: c_int = sig!(Prof, 27);
+    pub const SIGWINCH: c_int = sig!(Winch, 28);
+    pub const SIGCHLD: c_int = sig!(Child, 17);
+    pub const SIGBUS: c_int = sig!(Bus, 7);
+    pub const SIGUSR1: c_int = sig!(Usr1, 10);
+    pub const SIGUSR2: c_int = sig!(Usr2, 12);
+    pub const SIGCONT: c_int = sig!(Cont, 18);
+    pub const SIGSTOP: c_int = sig!(Stop, 19);
+    pub const SIGTSTP: c_int = sig!(Tstp, 20);
+    pub const SIGURG: c_int = sig!(Urg, 23);
+    pub const SIGIO: c_int = sig!(Io, 29);
+    pub const SIGSYS: c_int = sig!(Sys, 31);
 }
 
 macro_rules! define_signal_enum {
@@ -141,26 +154,26 @@ macro_rules! define_signal_enum {
         pub enum Signal {
             $(
                 $(#[$inner])*
-                $name = libc::$value,
+                $name = signum::$value,
             )*
         }
 
         impl Signal {
             /// Returns the signal number.
-            fn number(self) -> libc::c_int {
+            fn number(self) -> std::os::raw::c_int {
                 match self {
                     $(
-                        Signal::$name => libc::$value,
+                        Signal::$name => signum::$value,
                     )*
                 }
             }
 
             /// Parse a signal from its number.
             #[cfg(unix)]
-            fn from_number(number: libc::c_int) -> Option<Self> {
+            fn from_number(number: std::os::raw::c_int) -> Option<Self> {
                 match number {
                     $(
-                        libc::$value => Some(Signal::$name),
+                        signum::$value => Some(Signal::$name),
                     )*
                     _ => None,
                 }

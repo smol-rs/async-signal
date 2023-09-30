@@ -35,7 +35,7 @@ use std::mem;
 use std::os::raw::c_int;
 use std::sync::Mutex;
 
-use super::libc::SIGINT;
+use super::signum::SIGINT;
 
 /// The ID of a signal handler.
 pub(crate) type SigId = usize;

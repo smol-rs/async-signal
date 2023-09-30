@@ -93,7 +93,6 @@ use std::os::unix::io::{AsFd, AsRawFd, BorrowedFd, RawFd};
 mod libc {
     pub(crate) use std::os::raw::c_int;
 
-    // Define these ourselves.
     // Copy-pasted from the libc crate
     pub const SIGHUP: c_int = 1;
     pub const SIGINT: c_int = 2;

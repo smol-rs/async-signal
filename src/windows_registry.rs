@@ -118,7 +118,7 @@ impl Registry {
             };
 
             // Note that Windows runs these handlers in another thread, so there's no need to
-            // worry about deadlocks.
+            // worry about async signal safety.
             let handlers = registry.handlers.lock().unwrap_or_else(|e| e.into_inner());
 
             for handler in handlers.iter() {

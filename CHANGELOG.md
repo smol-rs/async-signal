@@ -1,3 +1,7 @@
+# Version 0.2.3
+
+- Remove the `signalfd` backend, as it offered little to no advantages over the pipe-based backend and it didn't catch signals sometimes. (#20)
+
 # Version 0.2.2
 
 - Fix build error on Android. (#18)

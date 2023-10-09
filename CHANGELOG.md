@@ -1,3 +1,7 @@
+# Version 0.2.4
+
+- Add `LICENSE` files to this crate. (#23)
+
 # Version 0.2.3
 
 - Remove the `signalfd` backend, as it offered little to no advantages over the pipe-based backend and it didn't catch signals sometimes. (#20)

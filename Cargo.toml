@@ -16,7 +16,7 @@ cfg-if = "1.0.0"
 futures-core = "0.3.26"
 
 [target.'cfg(unix)'.dependencies]
-async-io = "1.12.0"
+async-io = "2.0.0"
 futures-io = "0.3.26"
 rustix = { version = "0.38.15", default-features = false, features = ["process", "std"] }
 signal-hook-registry = "1.4.0"
@@ -35,7 +35,7 @@ features = [
 ]
 
 [dev-dependencies]
-async-io = "1.12.0"
+async-io = "2.0.0"
 fastrand = "2.0.1"
 futures-lite = "1.12.0"
 signal-hook = "0.3.14"

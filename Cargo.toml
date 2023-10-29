@@ -1,8 +1,8 @@
 [package]
 name = "async-signal"
-version = "0.2.4"
+version = "0.2.5"
 edition = "2018"
-authors = ["John Nunley <jtnunley01@gmail.com>"]
+authors = ["John Nunley <dev@notgull.net>"]
 rust-version = "1.63"
 description = "Async signal handling"
 license = "Apache-2.0 OR MIT"

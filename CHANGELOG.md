@@ -1,3 +1,7 @@
+# Version 0.2.5
+
+- Bump `async-io` to version 2.0.0. (#25)
+
 # Version 0.2.4
 
 - Add `LICENSE` files to this crate. (#23)

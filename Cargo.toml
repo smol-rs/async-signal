@@ -22,12 +22,12 @@ rustix = { version = "0.38.15", default-features = false, features = ["process",
 signal-hook-registry = "1.4.0"
 
 [target.'cfg(windows)'.dependencies]
-async-lock = "2.7.0"
+async-lock = "3.3.0"
 atomic-waker = "1.1.1"
 slab = "0.4.8"
 
 [target.'cfg(windows)'.dependencies.windows-sys]
-version = "0.48"
+version = "0.52"
 default-features = false
 features = [
     "Win32_Foundation",

@@ -1,3 +1,7 @@
+# Version 0.2.6
+
+- Bump `windows-sys` to 0.52 and `async-io` to 3.3.0. (#27)
+
 # Version 0.2.5
 
 - Bump `async-io` to version 2.0.0. (#25)

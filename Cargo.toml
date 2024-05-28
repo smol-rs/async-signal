@@ -8,7 +8,7 @@ description = "Async signal handling"
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/smol-rs/async-signal"
 keywords = ["async", "signal", "signal-hook", "signal-hook-registry"]
-categories = ["asynchronous", "concurrency", "os", "signal-handling"]
+categories = ["asynchronous", "concurrency", "os"]
 exclude = ["/.*"]
 
 [dependencies]

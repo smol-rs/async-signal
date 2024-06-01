@@ -1,3 +1,7 @@
+# Version 0.2.7
+
+- Remove an invalid category from `Cargo.toml`. (#33)
+
 # Version 0.2.6
 
 - Bump `windows-sys` to 0.52 and `async-io` to 3.3.0. (#27)

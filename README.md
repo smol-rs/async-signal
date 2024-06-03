@@ -35,7 +35,7 @@ use futures_lite::prelude::*;
 use signal_hook::low_level;
 
 // Register the signals we want to receive.
-let signals = Signals::new(&[
+let mut signals = Signals::new(&[
     Signal::Term,
     Signal::Quit,
     Signal::Int,

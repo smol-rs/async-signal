@@ -1,3 +1,7 @@
+# Version 0.2.8
+
+- Update README.md to use a working example. (#35)
+
 # Version 0.2.7
 
 - Remove an invalid category from `Cargo.toml`. (#33)

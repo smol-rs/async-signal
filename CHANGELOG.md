@@ -1,3 +1,8 @@
+# Version 0.2.9
+
+- Fix the `clippy::needless_borrows_for_generic_args` lint in the README
+  example. (#38)
+
 # Version 0.2.8
 
 - Update README.md to use a working example. (#35)

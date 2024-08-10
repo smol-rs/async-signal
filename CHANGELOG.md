@@ -1,3 +1,7 @@
+# Version 0.2.10
+
+- Update windows-sys to v0.59. (#41)
+
 # Version 0.2.9
 
 - Fix the `clippy::needless_borrows_for_generic_args` lint in the README

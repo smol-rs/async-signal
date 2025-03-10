@@ -18,7 +18,7 @@ futures-core = "0.3.26"
 [target.'cfg(unix)'.dependencies]
 async-io = "2.0.0"
 futures-io = "0.3.26"
-rustix = { version = "0.38.15", default-features = false, features = ["process", "std"] }
+rustix = { version = "1.0.1", default-features = false, features = ["process", "std"] }
 signal-hook-registry = "1.4.0"
 
 [target.'cfg(windows)'.dependencies]

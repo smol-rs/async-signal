@@ -27,7 +27,7 @@ atomic-waker = "1.1.1"
 slab = "0.4.8"
 
 [target.'cfg(windows)'.dependencies.windows-sys]
-version = "0.59"
+version = "0.60"
 default-features = false
 features = [
     "Win32_Foundation",

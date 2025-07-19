@@ -27,7 +27,7 @@
 
 use async_lock::OnceCell;
 use slab::Slab;
-use windows_sys::Win32::Foundation::BOOL;
+use windows_sys::core::BOOL;
 use windows_sys::Win32::System::Console::{SetConsoleCtrlHandler, CTRL_C_EVENT};
 
 use std::io::Result;

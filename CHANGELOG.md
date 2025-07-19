@@ -1,3 +1,7 @@
+# Version 0.2.12
+
+- Update windows-sys to v0.60. (#51)
+
 # Version 0.2.11
 
 - Update rustix to 1.0.7. (#49)

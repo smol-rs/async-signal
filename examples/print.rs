@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         signals
             .for_each(|signal| {
                 // Print the signal.
-                eprintln!("Received signal {:?}", signal);
+                eprintln!("Received signal {signal:?}");
 
                 // After printing it, do whatever the signal was supposed to do in the first place.
                 low_level::emulate_default_handler(signal.unwrap() as i32).unwrap();

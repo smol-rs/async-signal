@@ -3,7 +3,7 @@ name = "async-signal"
 version = "0.2.12"
 edition = "2021"
 authors = ["John Nunley <dev@notgull.net>"]
-rust-version = "1.63"
+rust-version = "1.71"
 description = "Async signal handling"
 license = "Apache-2.0 OR MIT"
 repository = "https://github.com/smol-rs/async-signal"
@@ -27,7 +27,7 @@ atomic-waker = "1.1.1"
 slab = "0.4.8"
 
 [target.'cfg(windows)'.dependencies.windows-sys]
-version = "0.60"
+version = "0.61"
 default-features = false
 features = [
     "Win32_Foundation",

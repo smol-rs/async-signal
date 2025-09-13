@@ -1,6 +1,6 @@
 [package]
 name = "async-signal"
-version = "0.2.12"
+version = "0.2.13"
 edition = "2021"
 authors = ["John Nunley <dev@notgull.net>"]
 rust-version = "1.71"

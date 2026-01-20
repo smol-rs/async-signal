@@ -38,7 +38,7 @@ features = [
 async-io = "2.0.0"
 fastrand = "2.0.1"
 futures-lite = "2.3.0"
-signal-hook = "0.3.14"
+signal-hook = "0.4.1"
 
 [target.'cfg(unix)'.dev-dependencies]
 libc = "0.2.139"
